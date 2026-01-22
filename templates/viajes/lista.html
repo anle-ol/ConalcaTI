@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Viajes - CONALCA{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-[#333333]">Gestión de Viajes</h1>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold text-[#333333] mb-4">Filtros de Búsqueda</h2>
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label for="placa" class="block text-sm font-medium text-[#333333] mb-2">Placa</label>
+                <input type="text" name="placa" id="placa" value="{{ placa }}" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF7900] focus:border-transparent"
+                       placeholder="Ej: ABC-123">
+            </div>
+            <div>
+                <label for="fecha_desde" class="block text-sm font-medium text-[#333333] mb-2">Fecha Desde</label>
+                <input type="date" name="fecha_desde" id="fecha_desde" value="{{ fecha_desde }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF7900] focus:border-transparent">
+            </div>
+            <div>
+                <label for="fecha_hasta" class="block text-sm font-medium text-[#333333] mb-2">Fecha Hasta</label>
+                <input type="date" name="fecha_hasta" id="fecha_hasta" value="{{ fecha_hasta }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF7900] focus:border-transparent">
+            </div>
+            <div>
+                <label for="estado_validacion" class="block text-sm font-medium text-[#333333] mb-2">Estado Validación</label>
+                <select name="estado_validacion" id="estado_validacion"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF7900] focus:border-transparent">
+                    <option value="">Todos</option>
+                    <option value="validado" {% if estado_validacion == 'validado' %}selected{% endif %}>Validado</option>
+                    <option value="no_validado" {% if estado_validacion == 'no_validado' %}selected{% endif %}>No Validado</option>
+                </select>
+            </div>
+            <div class="md:col-span-4 flex gap-2">
+                <button type="submit" class="bg-[#FF7900] hover:bg-[#e66a00] text-white px-6 py-2 rounded-lg transition duration-200 font-medium">
+                    Filtrar
+                </button>
+                <a href="{% url 'viajes:lista' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition duration-200 font-medium">
+                    Limpiar
+                </a>
+                <div class="flex gap-2 ml-auto">
+                    <a href="{% url 'viajes:exportar' %}?{{ request.GET.urlencode }}&formato=csv" 
+                       class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition duration-200 font-medium">
+                        Exportar CSV
+                    </a>
+                    <a href="{% url 'viajes:exportar' %}?{{ request.GET.urlencode }}&formato=excel" 
+                       class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-200 font-medium">
+                        Exportar Excel
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de Viajes -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-[#333333]">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Código</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Placa</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Tipo</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Fecha Inicio</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Fecha Fin</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Entregas</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Facturación</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Cliente</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Validado</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for vehiculo in page_obj %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">{{ vehiculo.codigo }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#333333]">{{ vehiculo.placa }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">{{ vehiculo.get_tipo_vehiculo_display }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">{{ vehiculo.fecha_inicio|date:"d/m/Y H:i" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">{{ vehiculo.fecha_fin|date:"d/m/Y H:i" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">{{ vehiculo.numero_entregas }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">${{ vehiculo.facturacion|floatformat:2 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">{{ vehiculo.cliente }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" 
+                                       class="sr-only peer" 
+                                       {% if vehiculo.validado %}checked{% endif %}
+                                       onchange="toggleValidado({{ vehiculo.id }}, this)">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#FF7900]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF7900]"></div>
+                                <span class="ml-3 text-sm text-[#333333]" id="status-{{ vehiculo.id }}">
+                                    {% if vehiculo.validado %}Validado{% else %}Pendiente{% endif %}
+                                </span>
+                            </label>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">
+                            No se encontraron registros con los filtros aplicados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        {% if page_obj.has_other_pages %}
+        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+            <div class="flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.placa %}&placa={{ request.GET.placa }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}{% if request.GET.fecha_hasta %}&fecha_hasta={{ request.GET.fecha_hasta }}{% endif %}{% if request.GET.estado_validacion %}&estado_validacion={{ request.GET.estado_validacion }}{% endif %}" 
+                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-[#333333] bg-white hover:bg-gray-50">
+                            Anterior
+                        </a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.placa %}&placa={{ request.GET.placa }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}{% if request.GET.fecha_hasta %}&fecha_hasta={{ request.GET.fecha_hasta }}{% endif %}{% if request.GET.estado_validacion %}&estado_validacion={{ request.GET.estado_validacion }}{% endif %}" 
+                           class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-[#333333] bg-white hover:bg-gray-50">
+                            Siguiente
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-[#333333]">
+                            Mostrando <span class="font-medium">{{ page_obj.start_index }}</span> a 
+                            <span class="font-medium">{{ page_obj.end_index }}</span> de 
+                            <span class="font-medium">{{ page_obj.paginator.count }}</span> resultados
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            {% if page_obj.has_previous %}
+                                <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.placa %}&placa={{ request.GET.placa }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}{% if request.GET.fecha_hasta %}&fecha_hasta={{ request.GET.fecha_hasta }}{% endif %}{% if request.GET.estado_validacion %}&estado_validacion={{ request.GET.estado_validacion }}{% endif %}" 
+                                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-[#333333] hover:bg-gray-50">
+                                    Anterior
+                                </a>
+                            {% endif %}
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-[#333333]">
+                                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                            </span>
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}{% if request.GET.placa %}&placa={{ request.GET.placa }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}{% if request.GET.fecha_hasta %}&fecha_hasta={{ request.GET.fecha_hasta }}{% endif %}{% if request.GET.estado_validacion %}&estado_validacion={{ request.GET.estado_validacion }}{% endif %}" 
+                                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-[#333333] hover:bg-gray-50">
+                                    Siguiente
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Función para obtener el token CSRF de las cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function toggleValidado(vehiculoId, checkbox) {
+    const statusSpan = document.getElementById('status-' + vehiculoId);
+    const originalChecked = checkbox.checked;
+    
+    // Deshabilitar el checkbox mientras se procesa
+    checkbox.disabled = true;
+    
+    // Obtener el token CSRF
+    const csrftoken = getCookie('csrftoken') || '{{ csrf_token }}';
+    
+    fetch(`/toggle-validado/${vehiculoId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            checkbox.checked = data.validado;
+            statusSpan.textContent = data.validado ? 'Validado' : 'Pendiente';
+        } else {
+            // Revertir el cambio si hay error
+            checkbox.checked = !originalChecked;
+            alert('Error al actualizar el estado: ' + (data.error || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        // Revertir el cambio si hay error
+        checkbox.checked = !originalChecked;
+        console.error('Error:', error);
+        alert('Error al comunicarse con el servidor');
+    })
+    .finally(() => {
+        checkbox.disabled = false;
+    });
+}
+</script>
+{% endblock %}
